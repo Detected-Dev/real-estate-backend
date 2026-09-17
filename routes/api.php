@@ -119,13 +119,21 @@ Route::apiResource('payments', PaymentController::class);
 Route::apiResource('reviews', ReviewController::class);
 
 
-// DON'T TOUCH IT ;/
-Route::post('/register', [AuthController::class, 'register'])
-    ->middleware('web');
-Route::post('/login', [AuthController::class , 'login'])
-    ->middleware('web');
+/*
+|--------------------------------------------------------------------------
+| Authentication
+|--------------------------------------------------------------------------
+*/
 
-Route::middleware('auth')->group(function() {
-    Route::get('/user' , [AuthController::class , 'user']);
-    Route::post('/logout' , [AuthController::class , 'logout']);
+Route::middleware('web')->group(function () {
+
+    Route::post('/register', [AuthController::class, 'register']);
+
+    Route::post('/login', [AuthController::class, 'login']);
+
+    Route::middleware('auth')->group(function () {
+        Route::get('/user', [AuthController::class, 'user']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+    });
+
 });
