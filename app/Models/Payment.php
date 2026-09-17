@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Payement extends Model
+class Payment extends Model
 {
-    /** @use HasFactory<\Database\Factories\PayementsFactory> */
-    use HasFactory;
+    protected $fillable = [
+        'transaction_id',
+        'amount',
+        'payment_method',
+        'status',
+        'paid_at',
+        'transaction_reference',
+    ];
 }
