@@ -120,8 +120,10 @@ Route::apiResource('reviews', ReviewController::class);
 
 
 // DON'T TOUCH IT ;/
-Route::post('/register', [AuthController::class , 'register']);
-Route::post('/login', [AuthController::class , 'login']);
+Route::post('/register', [AuthController::class, 'register'])
+    ->middleware('web');
+Route::post('/login', [AuthController::class , 'login'])
+    ->middleware('web');
 
 Route::middleware('auth')->group(function() {
     Route::get('/user' , [AuthController::class , 'user']);

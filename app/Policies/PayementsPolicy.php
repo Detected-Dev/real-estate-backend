@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\Payements;
+use App\Models\Payments;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class PayementsPolicy
+class PaymentsPolicy
 {
     /**
      * Determine whether the user can view any models.
@@ -19,7 +19,7 @@ class PayementsPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Payements $payements): bool
+    public function view(User $user, Payments $Payments): bool
     {
         return false;
     }
@@ -35,7 +35,7 @@ class PayementsPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Payements $payements): bool
+    public function update(User $user, Payments $Payments): bool
     {
         return false;
     }
@@ -43,7 +43,7 @@ class PayementsPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Payements $payements): bool
+    public function delete(User $user, Payments $Payments): bool
     {
         return false;
     }
@@ -51,7 +51,7 @@ class PayementsPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Payements $payements): bool
+    public function restore(User $user, Payments $Payments): bool
     {
         return false;
     }
@@ -59,7 +59,7 @@ class PayementsPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Payements $payements): bool
+    public function forceDelete(User $user, Payments $Payments): bool
     {
         return false;
     }
