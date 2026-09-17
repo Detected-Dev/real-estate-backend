@@ -40,25 +40,26 @@ class AuthController extends Controller
         ]);
     }
 
-    public function login(Request $request){
-        $credentials = $request->validate([
-            'email' => ['required','email'],
-            'password' => ['required' , 'string'],
-            'role' => 'user'
-        ]);
+    public function login(Request $request)
+{
+    $credentials = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required', 'string'],
+    ]);
 
-        if(!Auth::attempt($credentials , true)){
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
-        }
-
-        $request->session()->regenerate();
-        return response()->json([
-            'message' => 'login  successful',
-            'user' => $request->user()
+    if (!Auth::attempt($credentials, true)) {
+        throw ValidationException::withMessages([
+            'email' => ['The provided credentials are incorrect.'],
         ]);
     }
+
+    $request->session()->regenerate();
+
+    return response()->json([
+        'message' => 'Login successful',
+        'user' => $request->user(),
+    ]);
+}
 
     public function user(Request $request){
         return response()->json([
