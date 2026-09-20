@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Property;
+use App\Services\GeocodingService;
 use Illuminate\Http\Request;
 
 class PropertyController extends Controller
@@ -10,20 +11,17 @@ class PropertyController extends Controller
     /**
      * Display all properties.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $properties = Property::all();
-
-        return response()->json([
-            'message' => 'Biens récupérés avec succès.',
-            'data' => $properties
-        ], 200);
+        $perPage = $request->get('limit', 20);
+        $properties = Property::latest()->with('propertyType' , 'images')->paginate($perPage);
+        return $properties;
     }
 
     /**
      * Store a new property.
      */
-    public function store(Request $request)
+    public function store(Request $request ,GeocodingService $geocoder)
     {
         $validated = $request->validate([
             'owner_id' => 'required|exists:users,id',
@@ -49,6 +47,14 @@ class PropertyController extends Controller
 
             'status' => 'sometimes|string|in:draft,pending_approval,available,reserved,sold,rented,rejected,inactive',
         ]);
+        $coords = $geocoder->geocode(
+            $validated['address'],
+            $validated['city'],
+            $validated['postal_code'] ?? ''
+        );
+
+        $validated['latitude'] = $coords['latitude'] ?? null;
+        $validated['longitude'] = $coords['longitude'] ?? null;
 
         $property = Property::create($validated);
 
@@ -63,6 +69,7 @@ class PropertyController extends Controller
      */
     public function show(Property $property)
     {
+        $property = $property->load('propertyType', 'agency');
         return response()->json([
             'message' => 'Bien récupéré avec succès.',
             'data' => $property
@@ -72,7 +79,7 @@ class PropertyController extends Controller
     /**
      * Update a property.
      */
-    public function update(Request $request, Property $property)
+    public function update(Request $request, Property $property, GeocodingService $geocoder)
     {
         $validated = $request->validate([
             'owner_id' => 'sometimes|exists:users,id',
@@ -98,6 +105,19 @@ class PropertyController extends Controller
 
             'status' => 'sometimes|string|in:draft,pending_approval,available,reserved,sold,rented,rejected,inactive',
         ]);
+
+        if (
+            $validated['address'] !== $property->address ||
+            $validated['city'] !== $property->city
+        ) {
+            $coords = $geocoder->geocode(
+                $validated['address'],
+                $validated['city'],
+                $validated['postal_code'] ?? ''
+            );
+            $validated['latitude'] = $coords['latitude'] ?? $property->latitude;
+            $validated['longitude'] = $coords['longitude'] ?? $property->longitude;
+        }
 
         $property->update($validated);
 

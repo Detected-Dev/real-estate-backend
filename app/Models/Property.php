@@ -25,10 +25,18 @@ class Property extends Model
         'bathrooms',
         'floors',
         'status',
+        'latitude',
+        'longitude',
     ];
 
     public function images()
     {
         return $this->hasMany(PropertyImage::class);
+    }
+    public function propertyType(){
+        return $this->belongsTo(PropertyType::class);
+    }
+    public function agency (){
+        return $this->belongsTo(Agency::class);
     }
 }

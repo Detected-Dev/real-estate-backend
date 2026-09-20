@@ -33,7 +33,6 @@ class AuthController extends Controller
             'password' => Hash::make($validate['password']),
             'role' => 'user'
         ]);
-        $request->session()->regenerate();
         return response()->json([
             'message' => 'Registration successfully',
             'user' => $user,
@@ -63,7 +62,7 @@ class AuthController extends Controller
 
     public function user(Request $request){
         return response()->json([
-            'user' => $request->user()
+            'user' => $request->user()->load('agency')
         ]);
     }
 

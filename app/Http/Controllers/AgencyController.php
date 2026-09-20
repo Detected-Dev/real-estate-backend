@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Agency;
+use App\Models\User;
+use GuzzleHttp\RequestOptions;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class AgencyController extends Controller
 {
@@ -12,7 +16,7 @@ class AgencyController extends Controller
      */
     public function index()
     {
-        $agencies = Agency::all();
+        $agencies = Agency::with('user' , 'properties')->get();
 
         return response()->json([
             'message' => 'Agences récupérées avec succès.',
@@ -31,16 +35,55 @@ class AgencyController extends Controller
             'address' => 'required|string|max:255',
             'city' => 'required|string|max:255',
             'telephone' => 'required|string|max:30',
-            'email' => 'required|email|max:255',
-            'logo' => 'nullable|string|max:255',
+            'email' => [
+                'required',
+                'email',
+                'min:8',
+                'unique:users,email',
+            ],
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $agency = Agency::create($validated);
+        DB::beginTransaction();
+        try{
 
-        return response()->json([
-            'message' => 'Agence créée avec succès.',
-            'data' => $agency
-        ], 201);
+            $profileImagePath = null ;
+            if($request->hasFile('profile_image')){
+                $profileImagePath = $request->file('profile_image')->store('users/profile_images' , 'public');
+            }
+
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => 'agence',
+                'profile_image' => $profileImagePath,
+            ]);
+
+            $agency = Agency::create([
+                'name' => $validated['name'],
+                'user_id' => $user->id,
+                'email' => $validated['email'],
+                'telephone' => $validated['telephone'],
+                'description' => $validated['description'] ?? null,
+                'address' => $validated['address'],
+                'city' => $validated['city'],
+                'logo' => $validated['logo'] ?? null,
+            ]);
+
+            DB::commit(); // SUbmit  the transaction ;
+            return response()->json([
+                'message' => 'Agency created Successfully',
+            ]);
+
+        }catch(\Throwable $e){
+            DB::rollBack();
+            return response()->json([
+                'message' => 'FAiled to create agency',
+                'error' => $e->getMessage(),
+            ],500);
+        }
     }
 
     /**
@@ -65,8 +108,12 @@ class AgencyController extends Controller
             'address' => 'sometimes|string|max:255',
             'city' => 'sometimes|string|max:255',
             'telephone' => 'sometimes|string|max:30',
-            'email' => 'sometimes|email|max:255',
-            'logo' => 'nullable|string|max:255',
+            'email' => [
+                'required',
+                'email',
+                'min:8',
+                'unique:users,email,'. $agency->user_id,
+            ],
         ]);
 
         $agency->update($validated);
@@ -82,10 +129,27 @@ class AgencyController extends Controller
      */
     public function destroy(Agency $agency)
     {
-        $agency->delete();
+        if ($agency->properties()->exists()) {
+            return response()->json([
+                'message' => 'This agency cannot be deleted because it has properties.'
+            ], 409);
+        }
 
-        return response()->json([
-            'message' => 'Agence supprimée avec succès.'
-        ], 200);
+        DB::beginTransaction();
+        try{
+            $user = $agency->user;
+            $agency->delete();
+            $user->delete();
+            DB::commit();
+            return response()->json([
+                "message" => "agency and associated user has deleted successfully",
+            ]);
+        }catch(\Throwable $e){
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to delete agency',
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

@@ -18,25 +18,51 @@ use Illuminate\Support\Carbon;
     'password',
     'role',
 ])]
+
 #[Hidden([
     'password',
     'remember_token',
 ])]
+
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function agency()
+    {
+        return $this->hasOne(Agency::class);
+    }
+
+    // public function ownedProperties()
+    // {
+    //     return $this->hasMany(Property::class, 'owner_id');
+    // }
+
+    public function propertyRequests()
+    {
+        return $this->hasMany(PropertyRequest::class);
+    }
+
+    public function propertyVisits()
+    {
+        return $this->hasMany(PropertyVisit::class);
+    }
+
+    public function purchases()
+    {
+        return $this->hasMany(Transaction::class, 'buyer_id');
+    }
+
+    public function sales()
+    {
+        return $this->hasMany(Transaction::class, 'seller_id');
     }
 }

@@ -9,4 +9,8 @@ class PropertyType extends Model
 {
     /** @use HasFactory<\Database\Factories\PropertyTypesFactory> */
     use HasFactory;
+
+    public function propertyies (){
+        return $this->hasMany(Property::class);
+    }
 }
