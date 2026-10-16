@@ -41,10 +41,10 @@ class User extends Authenticatable
         return $this->hasOne(Agency::class);
     }
 
-    // public function ownedProperties()
-    // {
-    //     return $this->hasMany(Property::class, 'owner_id');
-    // }
+    public function ownedProperties()
+    {
+        return $this->hasMany(Property::class, 'owner_id');
+    }
 
     public function propertyRequests()
     {

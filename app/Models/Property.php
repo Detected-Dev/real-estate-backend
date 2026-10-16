@@ -39,4 +39,7 @@ class Property extends Model
     public function agency (){
         return $this->belongsTo(Agency::class);
     }
+    public function visits (){
+        return $this->hasMany(PropertyVisit::class);
+    }
 }

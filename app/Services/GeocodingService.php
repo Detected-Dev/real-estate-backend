@@ -7,24 +7,21 @@ use Illuminate\Support\Facades\Log;
 
 class GeocodingService
 {
-    /**
-     * Convert an address into [latitude, longitude] using the free
-     * Nominatim (OpenStreetMap) geocoder. Returns null if no match found
-     * or the request fails — callers should handle that gracefully.
-     */
-    public function geocode(string $address, string $city = '', string $postalCode = ''): ?array
+    public function geocode(string $address, string $city = ''): ?array
     {
-        $query = trim("{$address}, {$city} {$postalCode}");
+        $query = trim("{$address}, {$city}");
 
         try {
             $response = Http::withHeaders([
-                // Nominatim requires a real identifying User-Agent
                 'User-Agent' => 'YourRealEstateApp/1.0 (contact@yoursite.com)',
-            ])->timeout(5)->get('https://nominatim.openstreetmap.org/search', [
-                'q' => $query,
-                'format' => 'json',
-                'limit' => 1,
-            ]);
+            ])->timeout(5)->get(
+                'https://nominatim.openstreetmap.org/search',
+                [
+                    'q' => $query,
+                    'format' => 'json',
+                    'limit' => 1,
+                ]
+            );
 
             $results = $response->json();
 
@@ -35,7 +32,9 @@ class GeocodingService
                 ];
             }
         } catch (\Throwable $e) {
-            Log::warning("Geocoding failed for \"{$query}\": {$e->getMessage()}");
+            Log::warning(
+                "Geocoding failed for \"{$query}\": {$e->getMessage()}"
+            );
         }
 
         return null;

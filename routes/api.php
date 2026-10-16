@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AgencyController;
+use App\Http\Controllers\AgencyDashboardController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\PropertyImageController;
 use App\Http\Controllers\PropertyTypeController;
@@ -14,118 +16,42 @@ use App\Http\Controllers\PropertyVisitController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ReviewController;
-
-
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-| Authenticated User
-|--------------------------------------------------------------------------
-*/
-
-/*
-|--------------------------------------------------------------------------
-| Users
-|--------------------------------------------------------------------------
-*/
+use Illuminate\Image\Transformations\Rotate;
 
 Route::apiResource('users', UserController::class);
-
-
-/*
-|--------------------------------------------------------------------------
-| Agencies
-|--------------------------------------------------------------------------
-*/
 
 Route::apiResource('agencies', AgencyController::class);
 
 
-/*
-|--------------------------------------------------------------------------
-| Properties
-|--------------------------------------------------------------------------
-*/
-
 Route::apiResource('properties', PropertyController::class);
 
 
-/*
-|--------------------------------------------------------------------------
-| Property Images
-|--------------------------------------------------------------------------
-*/
 
 Route::apiResource('property-images', PropertyImageController::class);
 
 
-/*
-|--------------------------------------------------------------------------
-| Property Types
-|--------------------------------------------------------------------------
-*/
 
 Route::apiResource('property-types', PropertyTypeController::class);
 
 
-/*
-|--------------------------------------------------------------------------
-| Property Requests
-|--------------------------------------------------------------------------
-*/
-
 Route::apiResource('property-requests', PropertyRequestController::class);
 
-
-/*
-|--------------------------------------------------------------------------
-| Property Visits
-|--------------------------------------------------------------------------
-*/
 
 Route::apiResource('property-visits', PropertyVisitController::class);
 
 
-/*
-|--------------------------------------------------------------------------
-| Transactions
-|--------------------------------------------------------------------------
-*/
-
 Route::apiResource('transactions', TransactionController::class);
 
 
-/*
-|--------------------------------------------------------------------------
-| Payments
-|--------------------------------------------------------------------------
-*/
 
 Route::apiResource('payments', PaymentController::class);
 
 
-/*
-|--------------------------------------------------------------------------
-| Reviews
-|--------------------------------------------------------------------------
-*/
 
 Route::apiResource('reviews', ReviewController::class);
 
 
-/*
-|--------------------------------------------------------------------------
-| Authentication
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware('web')->group(function () {
+Route::middleware("")->group(function () {
 
     Route::post('/register', [AuthController::class, 'register']);
 
@@ -135,5 +61,39 @@ Route::middleware('web')->group(function () {
         Route::get('/user', [AuthController::class, 'user']);
         Route::post('/logout', [AuthController::class, 'logout']);
     });
-
 });
+
+//solo routes functions
+Route::get(
+    '/properties/{property}/my-visit',
+    [PropertyVisitController::class, 'myVisit']
+);
+Route::middleware('auth')->group(function () {
+    Route::get(
+        '/properties/{property}/my-request',
+        [PropertyRequestController::class , 'myRequest']
+    );
+});
+Route::middleware('auth')->group(function () {
+    Route::get(
+        '/properties/{property}/my-transaction',
+        [TransactionController::class , 'myTransaction']
+    );
+});
+
+// Agency Dashboard :
+Route::middleware('auth')->group(function () {
+    Route::get('/agency/dashboard' , [AgencyDashboardController::class , 'index']);
+});
+
+Route::middleware('auth')->group(function (){
+    Route::patch('/agency/propertyRequests/{propertyRequest}/accept' , [PropertyRequestController::class , 'accept']);
+    Route::patch('/agency/propertyRequests/{propertyRequest}/reject' , [PropertyRequestController::class , 'reject']);
+
+
+    Route::patch('/agency/propertyVisits/{propertyVisit}/accept' , [PropertyVisitController::class , 'accept']);
+    Route::patch('/agency/propertyVisits/{propertyVisit}/reject' , [PropertyVisitController::class , 'reject']);
+});
+
+// GEMINI CHATBOOT :
+Route::post('/chat', [ChatController::class, 'send'])->middleware('throttle:20,1');

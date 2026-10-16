@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Property;
 use App\Models\PropertyRequest;
 use Illuminate\Http\Request;
 
@@ -27,22 +28,24 @@ class PropertyRequestController extends Controller
     {
         $validated = $request->validate([
             'property_id' => 'required|exists:properties,id',
-            'user_id' => 'required|exists:users,id',
             'agency_id' => 'required|exists:agencies,id',
-
-            'type' => 'required|string|in:purchase,rental,visit',
-
+            'type' => 'required|string|in:rent,sale',
             'message' => 'nullable|string',
-
-            'offer_price' => 'nullable|numeric|min:0',
-
-            'status' => 'sometimes|string|in:pending,accepted,rejected,cancelled,completed',
+            'offer_price' => 'required|numeric|min:0',
         ]);
 
-        $propertyRequest = PropertyRequest::create($validated);
+        $propertyRequest = PropertyRequest::create([
+            'property_id' => $validated['property_id'],
+            'user_id' => $request->user()->id,
+            'agency_id' => $validated['agency_id'],
+            'type' => $validated['type'],
+            'message' => $validated['message'],
+            'offer_price' => $validated['offer_price'],
+            'status' => 'pending'
+        ]);
 
         return response()->json([
-            'message' => 'Demande créée avec succès.',
+            'message' => 'Request has been created successfully',
             'data' => $propertyRequest
         ], 201);
     }
@@ -96,4 +99,31 @@ class PropertyRequestController extends Controller
             'message' => 'Demande supprimée avec succès.'
         ], 200);
     }
+    // Other Function :
+    public function myRequest(Property $property , Request $request){
+        $propertyId = $property->id ;
+        $userId = $request->user()->id ;
+        $myRequest = PropertyRequest::where([['property_id' , $propertyId],['user_id' , $userId]])->latest()->first();
+        return response()->json([
+            'data' =>  $myRequest ,
+        ]);
+    }
+
+    public function accept (PropertyRequest $propertyRequest){
+        $propertyRequest->update([
+            'status' => 'accepted'
+        ]);
+        return response()->json([
+            'message' => 'property Request has been accepted',
+        ]);
+    }
+    public function reject (PropertyRequest $propertyRequest){
+        $propertyRequest->update([
+            'status' => 'rejected'
+        ]);
+        return response()->json([
+            'message' => 'property Request has been rejected',
+        ]);
+    }
+
 }

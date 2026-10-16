@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Property;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 
@@ -27,20 +28,22 @@ class TransactionController extends Controller
     {
         $validated = $request->validate([
             'property_id' => 'required|exists:properties,id',
-            'buyer_id' => 'required|exists:users,id',
             'seller_id' => 'required|exists:users,id',
             'agency_id' => 'required|exists:agencies,id',
-
             'type' => 'required|string|in:sale,rent',
-
             'amount' => 'required|numeric|min:0',
-
-            'status' => 'sometimes|string|in:pending,in_progress,completed,cancelled',
-
             'transaction_date' => 'nullable|date',
         ]);
 
-        $transaction = Transaction::create($validated);
+        $transaction = Transaction::create([
+            'property_id' => $validated['property_id'],
+            'seller_id' => $validated['seller_id'],
+            'buyer_id' => $request->user()->id,
+            'agency_id' => $validated['agency_id'],
+            'type' => $validated['type'],
+            'amount' => $validated['amount'],
+            'transaction_date' => $validated['transaction_date'] ?? null,
+        ]);
 
         return response()->json([
             'message' => 'Transaction créée avec succès.',
@@ -97,5 +100,12 @@ class TransactionController extends Controller
         return response()->json([
             'message' => 'Transaction supprimée avec succès.'
         ], 200);
+    }
+
+    public function myTransaction(Property $property , Request $request){
+        $transaction = Transaction::where([['property_id' , $property->id],['buyer_id' , $request->user()->id]])->latest()->first();
+        return response()->json([
+            'data' => $transaction
+        ]);
     }
 }

@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('property_id')
-                ->constrained('properties');
+                ->constrained('properties')
+                ->cascadeOnDelete();
 
             $table->string('image_url');
 
